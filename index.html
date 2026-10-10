@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Matthew's Math Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F7FC; --card:#FFFFFF; --ink:#1C2A4A; --muted:#56637E; --line:#D3DCEA;
+  --grid:rgba(59,130,214,.09);
+  --orange:#F08A24; --blue:#3B82D6; --blue-deep:#2A63A8; --yellow:#F5C242; --red:#D9403A; --green:#2F9B5A;
+  --good-bg:#E4F4EA; --bad-bg:#FBE7E6; --hint-bg:#FFF6DC; --wid-bg:#EEF4FC;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111827; --card:#1A2336; --ink:#EEF2FA; --muted:#A5B0C7; --line:#2F3B57;
+    --grid:rgba(120,165,230,.07);
+    --good-bg:#16352A; --bad-bg:#3A1E22; --hint-bg:#3A3120; --blue-deep:#1E4F8C; --wid-bg:#151D2E;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111827; --card:#1A2336; --ink:#EEF2FA; --muted:#A5B0C7; --line:#2F3B57;
+  --grid:rgba(120,165,230,.07);
+  --good-bg:#16352A; --bad-bg:#3A1E22; --hint-bg:#3A3120; --blue-deep:#1E4F8C; --wid-bg:#151D2E;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; min-height:100vh; color:var(--ink);
+  font-family:"Andika","Comic Neue","Trebuchet MS",system-ui,sans-serif;
+  font-size:18px; line-height:1.45;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+.wrap{max-width:720px; margin:0 auto; padding:16px 16px 48px}
+header{display:flex; flex-direction:column; gap:10px; margin-bottom:14px}
+.top{display:flex; align-items:center; gap:12px; justify-content:space-between}
+.brand{font-weight:700; font-size:17px; color:var(--muted)}
+.streak{font-weight:700; color:var(--orange); font-size:17px}
+.cubes{display:flex; flex-wrap:wrap; gap:5px; padding-top:4px}
+.pc{width:16px; height:16px; border-radius:3px; background:var(--line); position:relative}
+.pc::after{content:""; position:absolute; top:-4px; left:5px; width:6px; height:4px; border-radius:2px 2px 0 0; background:inherit}
+.pc.now{background:var(--blue)} .pc.first{background:var(--green)} .pc.second{background:var(--orange)} .pc.missed{background:var(--red)}
+
+.card{background:var(--card); border:2px solid var(--line); border-radius:18px; padding:22px 20px 20px}
+.skill{display:inline-block; font-size:15px; font-weight:700; color:var(--blue); background:color-mix(in srgb,var(--blue) 14%,transparent); padding:3px 12px; border-radius:999px; margin-bottom:8px}
+.count{font-size:15px; color:var(--muted); margin-bottom:6px}
+h1{font-size:30px; line-height:1.15; margin:4px 0 12px}
+h2{font-size:21px; margin:22px 0 10px}
+.instr{font-size:20px; margin:0 0 14px}
+.story{font-size:22px; margin:0 0 12px}
+.eq{font-size:34px; font-weight:700; display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:10px 0; font-variant-numeric:tabular-nums}
+.eq .so{font-size:24px; font-weight:400}
+.eq .word{font-size:22px; font-weight:400}
+input.blank{font:inherit; font-size:32px; width:2.3em; height:1.45em; text-align:center; color:var(--ink); background:var(--card); border:3px solid var(--ink); border-radius:10px; padding:0}
+input.blank:focus{outline:3px solid var(--yellow); outline-offset:2px}
+input.blank.right{border-color:var(--green); background:var(--good-bg)}
+input.blank.wrong{border-color:var(--red); background:var(--bad-bg)}
+input.blank.revealed{border-color:var(--orange); border-style:dashed}
+.choices{display:inline-flex; flex-wrap:wrap; gap:8px; border-radius:14px; padding:3px; border:3px solid transparent}
+.choices.wrong{border-color:var(--red); background:var(--bad-bg)}
+.choices.right{border-color:var(--green); background:var(--good-bg)}
+.choices.revealed{border-color:var(--orange); border-style:dashed}
+.msg{border-radius:12px; padding:12px 14px; margin-top:14px; font-size:19px}
+.msg.good{background:var(--good-bg)} .msg.bad{background:var(--bad-bg)} .msg.hint{background:var(--hint-bg)}
+.msg:empty{display:none}
+.say{display:block; margin-top:8px; font-weight:700}
+.actions{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap}
+
+button{font:inherit; font-size:21px; font-weight:700; cursor:pointer; border:none; border-radius:14px; padding:12px 26px; color:#fff; background:var(--blue); box-shadow:0 5px 0 var(--blue-deep); transition:transform .08s, box-shadow .08s; touch-action:manipulation}
+button:active{transform:translateY(4px); box-shadow:0 1px 0 var(--blue-deep)}
+button:focus-visible{outline:3px solid var(--yellow); outline-offset:3px}
+button.quiet{background:transparent; color:var(--ink); box-shadow:none; border:2px solid var(--line); font-weight:400; font-size:16px; padding:6px 14px}
+button.choice{font-size:24px; min-width:64px; padding:6px 16px; color:var(--ink); background:var(--card); border:3px solid var(--ink); box-shadow:none; border-radius:10px}
+button.choice:active{transform:none; box-shadow:none}
+button.choice.sel{background:var(--blue); border-color:var(--blue); color:#fff}
+button.tool{font-size:17px; padding:8px 16px; background:var(--card); color:var(--ink); border:2px solid var(--line); box-shadow:none}
+button.tool.main{background:var(--orange); border-color:var(--orange); color:#fff; box-shadow:0 4px 0 color-mix(in srgb,var(--orange) 60%,#000)}
+button.tool.main:active{box-shadow:0 1px 0 color-mix(in srgb,var(--orange) 60%,#000)}
+.modes{display:grid; gap:12px; margin-top:6px}
+.modes button{text-align:left}
+.modes small{display:block; font-weight:400; font-size:15px; opacity:.9}
+.skillgrid{display:flex; flex-wrap:wrap; gap:8px}
+.skillgrid button{font-size:16px; padding:8px 14px; background:var(--card); color:var(--ink); border:2px solid var(--line); box-shadow:none}
+.note{font-size:16px; color:var(--muted); margin-top:20px; border-top:2px dashed var(--line); padding-top:14px}
+
+/* ----- interactive manipulatives ----- */
+.wid{background:var(--wid-bg); border:2px dashed var(--line); border-radius:14px; padding:12px 14px; margin:4px 0 16px; overflow-x:auto}
+.wid-tip{font-size:16px; color:var(--muted); margin:0 0 10px}
+.wid-row{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end}
+.wid-cap{font-size:18px; font-weight:700; margin-top:10px; min-height:1.4em}
+.wid-tools{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+.tf{--c:50px; display:grid; grid-template-columns:repeat(5,var(--c)); grid-auto-rows:var(--c); border:2px solid var(--ink); background:var(--card)}
+@media (max-width:480px){ .tf{--c:40px} }
+.cell{border:1px solid color-mix(in srgb,var(--ink) 50%,transparent); display:grid; place-items:center; position:relative}
+.cell.open{cursor:pointer}
+.ctr{width:78%; height:78%; border-radius:50%; position:relative; touch-action:none; user-select:none; -webkit-user-select:none}
+.ctr.y{background:var(--yellow)} .ctr.r{background:var(--red)}
+.ctr.move{cursor:grab; box-shadow:0 0 0 3px color-mix(in srgb,var(--yellow) 70%,transparent)}
+.ctr.dragging{z-index:50; cursor:grabbing; box-shadow:0 8px 16px rgba(0,0,0,.4)}
+.ctr.tap{cursor:pointer}
+.ctr.x{opacity:.5}
+.ctr.x::before,.ctr.x::after{content:""; position:absolute; left:8%; right:8%; top:45%; height:4px; background:var(--ink); border-radius:2px; transform:rotate(45deg)}
+.ctr.x::after{transform:rotate(-45deg)}
+.train{display:flex; gap:16px; padding-top:32px; flex-wrap:wrap}
+.grp{display:flex; gap:3px}
+.cb{width:30px; height:30px; border-radius:5px; position:relative; flex:none; margin-top:6px}
+.cb::after{content:""; position:absolute; top:-6px; left:10px; width:10px; height:6px; border-radius:3px 3px 0 0; background:inherit}
+.cb.o{background:var(--orange)} .cb.b{background:var(--blue)} .cb.g{background:var(--green)} .cb.rd{background:var(--red)}
+.cb.tap{cursor:pointer; outline:2px dashed var(--blue); outline-offset:3px}
+.cb .n{position:absolute; top:-36px; left:-6px; right:-6px; text-align:center; font-weight:700; font-size:19px}
+.cb.new{box-shadow:0 0 0 3px var(--yellow)}
+.cb.dim{opacity:.3}
+.cb.extra{box-shadow:0 0 0 3px var(--yellow)}
+.towers{display:flex; gap:30px; align-items:flex-end}
+.tower{display:flex; flex-direction:column; align-items:center}
+.stack{display:flex; flex-direction:column-reverse; gap:2px}
+.stack .cb{width:30px; height:22px; margin-top:6px}
+.tlab{font-weight:700; font-size:22px; margin-top:6px}
+.cmp{display:grid; grid-template-columns:auto 1fr; gap:12px 12px; align-items:center}
+.clab{font-weight:700; font-size:16px}
+.cline{display:flex; gap:4px}
+.cline.wrapc{flex-wrap:wrap}
+.cline .cb{width:24px; height:24px}
+.cline .cb::after{left:7px}
+.nl svg{display:block; width:100%; min-width:480px; height:auto}
+@keyframes hop{0%{transform:translateY(0)}40%{transform:translateY(-14px)}100%{transform:translateY(0)}}
+.frog{animation:hop .35s ease-out; transform-box:fill-box}
+
+.choice.long{font-size:18px; min-width:0; padding:8px 12px}
+.choices.multi{flex-direction:column; align-items:flex-start}
+button.slot{font:inherit; font-size:32px; font-weight:700; width:2.3em; height:1.45em; padding:0; color:var(--ink); background:var(--card); border:3px dashed var(--ink); border-radius:10px; box-shadow:none; vertical-align:middle}
+button.slot:active{transform:none; box-shadow:none}
+button.slot.filled{border-style:solid}
+button.slot.right{border-color:var(--green); background:var(--good-bg)}
+button.slot.wrong{border-color:var(--red); background:var(--bad-bg)}
+button.slot.revealed{border-color:var(--orange)}
+.cards{display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 14px; align-items:center}
+.cards .lab{font-size:16px; color:var(--muted); width:100%}
+button.ncard{font-size:28px; width:60px; height:60px; padding:0; color:var(--ink); background:color-mix(in srgb,var(--ink) 16%,var(--card)); border:2px solid var(--line); box-shadow:0 4px 0 color-mix(in srgb,var(--ink) 25%,transparent); border-radius:10px}
+button.ncard.sel{outline:4px solid var(--yellow); outline-offset:2px}
+button.ncard.used{opacity:.25}
+.box{display:inline-block; width:1.4em; height:1.25em; border:3px solid var(--ink); border-radius:6px; vertical-align:middle}
+.stbl{border-collapse:collapse; margin:4px 0 14px; font-size:19px}
+.stbl th,.stbl td{border:2px solid var(--line); padding:6px 12px; text-align:center}
+.stbl th{background:color-mix(in srgb,var(--blue) 12%,transparent)}
+.pairgrid{display:flex; flex-direction:column; gap:4px}
+.nl rect[data-n]{cursor:pointer}
+.score{font-size:64px; font-weight:700; line-height:1; margin:6px 0}
+.score small{font-size:24px; color:var(--muted); font-weight:400}
+.stars{font-size:40px; letter-spacing:4px; color:var(--yellow)}
+.skills{list-style:none; padding:0; margin:16px 0 0}
+.skills li{padding:12px 0; border-top:1px solid var(--line)}
+.skills .row{display:flex; justify-content:space-between; gap:12px; align-items:center; font-weight:700}
+.skills .tip{font-size:16px; color:var(--muted); margin-top:4px}
+.skills button{margin-top:8px; font-size:15px; padding:6px 12px; box-shadow:0 3px 0 var(--blue-deep)}
+.dots{display:flex; gap:5px; flex-shrink:0}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:15px; color:var(--muted); margin-top:10px}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.confetti{position:fixed; inset:0; pointer-events:none; z-index:99; overflow:hidden}
+.confetti span{position:absolute; top:30%; width:10px; height:14px; border-radius:2px}
+@media (prefers-reduced-motion:reduce){button{transition:none} .frog{animation:none}}
+@media (max-width:420px){ .eq{font-size:30px} input.blank{font-size:28px} h1{font-size:26px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <div class="brand">Matthew's math practice</div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="streak" id="streak"></span><button class="quiet" id="menuBtn" hidden>Menu</button></div>
+    </div>
+    <div class="cubes" id="progress" aria-hidden="true"></div>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script>
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const B=ans=>({b:ans});
+const M="\u2212";
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch=matchMedia('(pointer:coarse)').matches;
+
+/* ---------- helpers ---------- */
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function pop(node,delay=0){ if(reduce)return; node.animate([{transform:'scale(.2)'},{transform:'scale(1.15)'},{transform:'scale(1)'}],{duration:320,delay,easing:'ease-out',fill:'backwards'}); }
+function wobble(node){ if(reduce)return; node.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:260}); }
+function flipTo(node,parent){
+  const a=node.getBoundingClientRect();
+  node.style.transform=''; node.classList.remove('dragging');
+  parent.appendChild(node);
+  const b=node.getBoundingClientRect();
+  if(!reduce) node.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px)`},{transform:'translate(0,0)'}],{duration:420,easing:'cubic-bezier(.25,1.3,.5,1)'});
+}
+function frame(){const f=el('div','tf');for(let i=0;i<10;i++)f.appendChild(el('div','cell'));return f;}
+function shell(box,tip){
+  box.innerHTML='';
+  const w=el('div','wid'); w.appendChild(el('p','wid-tip',tip));
+  const body=el('div','wid-row'), cap=el('div','wid-cap'), tools=el('div','wid-tools');
+  w.append(body,cap,tools); box.appendChild(w);
+  return {body,cap,tools};
+}
+function tool(tools,label,fn,main){const b=el('button','tool'+(main?' main':''),label);b.type='button';b.onclick=fn;tools.appendChild(b);return b;}
+function draggable(c,{target,drop}){
+  let sx=0,sy=0,drag=false,active=false;
+  c.addEventListener('pointerdown',e=>{ if(c.dataset.lock)return; active=true; drag=false; sx=e.clientX; sy=e.clientY; try{c.setPointerCapture(e.pointerId);}catch(_){} e.preventDefault(); });
+  c.addEventListener('pointermove',e=>{ if(!active)return; const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(!drag && Math.hypot(dx,dy)>6){drag=true;c.classList.add('dragging');}
+    if(drag) c.style.transform=`translate(${dx}px,${dy}px)`; });
+  const end=e=>{ if(!active)return; active=false;
+    if(!drag){ drop(); return; }
+    const r=target.getBoundingClientRect(), pad=24;
+    const inside=e.clientX>=r.left-pad&&e.clientX<=r.right+pad&&e.clientY>=r.top-pad&&e.clientY<=r.bottom+pad;
+    if(inside && drop()) return;
+    const t=c.style.transform; c.style.transform=''; c.classList.remove('dragging');
+    if(!reduce) c.animate([{transform:t},{transform:'translate(0,0)'}],{duration:260,easing:'ease-out'});
+  };
+  c.addEventListener('pointerup',end); c.addEventListener('pointercancel',end);
+}
+function nlSVG(start,pos,hops){
+  const step=31,x0=18,y=78,X=i=>x0+i*step,w=X(20)+18;
+  let o=`<svg viewBox="0 0 ${w} 110" role="img" aria-label="Number line 0 to 20">`;
+  o+=`<line x1="4" y1="${y}" x2="${w-4}" y2="${y}" stroke="currentColor" stroke-width="2"/>`;
+  o+=`<path d="M4 ${y} l8 -5 v10 z M${w-4} ${y} l-8 -5 v10 z" fill="currentColor"/>`;
+  for(let i=0;i<=20;i++){
+    o+=`<line x1="${X(i)}" y1="${y-7}" x2="${X(i)}" y2="${y+7}" stroke="currentColor" stroke-width="1.5"/>`;
+    o+=`<text x="${X(i)}" y="${y+25}" text-anchor="middle" font-size="15" font-weight="${i===pos?700:400}" fill="currentColor">${i}</text>`;
+  }
+  if(start!=null) o+=`<circle cx="${X(start)}" cy="${y}" r="10" fill="none" stroke="var(--blue)" stroke-width="3"/>`;
+  hops.forEach(([a,b])=>{ o+=`<path d="M${X(a)} ${y-9} Q ${(X(a)+X(b))/2} ${y-46} ${X(b)} ${y-9}" fill="none" stroke="var(--orange)" stroke-width="3"/>`; });
+  if(pos!=null) o+=`<text class="frog" x="${X(pos)}" y="${y-14}" text-anchor="middle" font-size="28" pointer-events="none">🐸</text>`;
+  for(let i=0;i<=20;i++) o+=`<rect data-n="${i}" x="${X(i)-15}" y="${y-34}" width="30" height="76" fill="transparent"/>`;
+  return o+`</svg>`;
+}
+
+/* ---------- interactive widgets ---------- */
+const W={
+  moveTen(box,{a,b}){
+    const build=()=>{
+      const {body,cap,tools}=shell(box,'Drag a red counter (or tap it) to move it into the first ten frame.');
+      const f1=frame(), f2=frame(); body.append(f1,f2);
+      for(let i=0;i<a;i++) f1.children[i].appendChild(el('div','ctr y'));
+      const upd=()=>{ const n=f1.querySelectorAll('.ctr').length;
+        cap.textContent = n===10 ? 'The first frame is full. That makes 10! Now count the red ones left.' : `First frame: ${n}. Keep filling it up to 10.`; };
+      for(let i=0;i<b;i++){ const c=el('div','ctr r move'); f2.children[i].appendChild(c);
+        draggable(c,{target:f1, drop:()=>{ const t=[...f1.children].find(x=>!x.firstChild);
+          if(!t){ wobble(f1); cap.textContent='That frame is already full. 10 is the most it holds!'; return false; }
+          flipTo(c,t); c.classList.remove('move'); c.dataset.lock=1; upd(); return true; }}); }
+      upd(); tool(tools,'Start over',build);
+    }; build();
+  },
+  crossOut(box,{total,tip}){
+    const {body,cap,tools}=shell(box,tip||'Tap counters to cross them out.');
+    const frames=total>10?[frame(),frame()]:[frame()]; body.append(...frames);
+    const cells=frames.flatMap(f=>[...f.children]);
+    const upd=()=>{ cap.textContent=`Crossed out: ${body.querySelectorAll('.ctr.x').length}`; };
+    for(let i=0;i<total;i++){ const c=el('div','ctr r tap'); c.onclick=()=>{c.classList.toggle('x');pop(c);upd();}; cells[i].appendChild(c); }
+    tool(tools,'Start over',()=>{body.querySelectorAll('.ctr.x').forEach(c=>c.classList.remove('x'));upd();}); upd();
+  },
+  fillTen(box,{a}){
+    const {body,cap,tools}=shell(box,'Tap the empty boxes to add red counters until the frame is full.');
+    const f=frame(); body.appendChild(f);
+    const upd=()=>{ const r=f.querySelectorAll('.ctr.r').length; cap.textContent = a+r===10 ? `Full! ${a} and ${r} make 10.` : `Red counters added: ${r}`; };
+    [...f.children].forEach((cell,i)=>{ if(i<a){cell.appendChild(el('div','ctr y'));return;}
+      cell.classList.add('open'); cell.onclick=()=>{ if(cell.firstChild) cell.firstChild.remove(); else { const c=el('div','ctr r'); cell.appendChild(c); pop(c);} upd(); }; });
+    tool(tools,'Start over',()=>{f.querySelectorAll('.ctr.r').forEach(c=>c.remove());upd();}); upd();
+  },
+  countOn(box,{big,small}){
+    const build=()=>{
+      const {body,cap,tools}=shell(box,`Say "${big}" for the orange cubes. Then tap each blue cube to count on.`);
+      const train=el('div','train'), g1=el('div','grp'), g2=el('div','grp');
+      for(let i=0;i<big;i++) g1.appendChild(el('div','cb o'));
+      g1.lastChild.appendChild(el('span','n',String(big)));
+      let k=0;
+      for(let i=0;i<small;i++){ const c=el('div','cb b tap'); g2.appendChild(c);
+        c.onclick=()=>{ if(c.dataset.done)return; c.dataset.done=1; k++; c.classList.remove('tap'); c.classList.add('new'); c.appendChild(el('span','n',String(big+k))); pop(c);
+          if(k===small) cap.textContent='You counted on! Which number did you land on?'; }; }
+      train.append(g1,g2); body.appendChild(train); cap.textContent=`Start at ${big}.`;
+      tool(tools,'Start over',build);
+    }; build();
+  },
+  turnAround(box,{a,b}){
+    const {body,cap,tools}=shell(box,'Tap "Turn it around" to switch the order. Watch the cubes!');
+    const train=el('div','train'), g1=el('div','grp'), g2=el('div','grp');
+    for(let i=0;i<a;i++) g1.appendChild(el('div','cb o'));
+    for(let i=0;i<b;i++) g2.appendChild(el('div','cb b'));
+    g1.lastChild.appendChild(el('span','n',String(a))); g2.lastChild.appendChild(el('span','n',String(b)));
+    train.append(g1,g2); body.appendChild(train);
+    let flipped=false; const capf=()=>{cap.textContent=flipped?`Now it's ${b} + ${a}. Same cubes, so the same total!`:`This is ${a} + ${b}.`;};
+    tool(tools,'Turn it around',()=>{
+      const cubes=[...train.querySelectorAll('.cb')], before=cubes.map(c=>c.getBoundingClientRect());
+      train.insertBefore(train.lastChild,train.firstChild); flipped=!flipped;
+      if(!reduce) cubes.forEach((c,i)=>{const r=c.getBoundingClientRect(); c.animate([{transform:`translate(${before[i].left-r.left}px,${before[i].top-r.top}px)`},{transform:'none'}],{duration:550,easing:'ease-in-out'});});
+      capf(); },true);
+    capf();
+  },
+  towers(box,{n,delta}){
+    const {body,cap,tools}=shell(box,`These towers show the double ${n} + ${n}. Tap the orange button to make the near double.`);
+    const mk=()=>{const t=el('div','tower'), s=el('div','stack'); for(let i=0;i<n;i++) s.appendChild(el('div','cb rd')); const l=el('div','tlab',String(n)); t.append(s,l); return {s,l,t};};
+    const t1=mk(), t2=mk(); const wrap=el('div','towers'); wrap.append(t1.t,t2.t); body.appendChild(wrap);
+    let on=false;
+    const btn=tool(tools,delta>0?'Add 1 cube':'Take 1 cube away',()=>{
+      on=!on;
+      if(delta>0){ if(on){const c=el('div','cb g new'); t2.s.appendChild(c); pop(c); t2.l.textContent=n+1;} else {t2.s.lastChild.remove(); t2.l.textContent=n;} }
+      else { t1.s.lastChild.classList.toggle('dim',on); t1.l.textContent=on?n-1:n; }
+      cap.textContent = on ? (delta>0?`${n} + ${n+1} is one MORE than ${n} + ${n}.`:`${n-1} + ${n} is one LESS than ${n} + ${n}.`) : `${n} + ${n} is a double.`;
+      btn.textContent = on ? 'Show the double again' : (delta>0?'Add 1 cube':'Take 1 cube away');
+    },true);
+    cap.textContent=`${n} + ${n} is a double.`;
+  },
+  compare(box,{rows,act}){
+    const build=()=>{
+      const {body,cap,tools}=shell(box,act.tip);
+      const grid=el('div','cmp'); body.appendChild(grid);
+      const lines=rows.map(r=>{ grid.appendChild(el('div','clab',r.label)); const line=el('div','cline'); for(let i=0;i<r.n;i++) line.appendChild(el('div','cb '+r.cls)); grid.appendChild(line); return line; });
+      let done=false;
+      tool(tools,act.label,()=>{ if(done)return; done=true;
+        if(act.type==='match'){ const m=Math.min(...lines.map(l=>l.children.length));
+          lines.forEach(l=>[...l.children].forEach((c,i)=>{ if(i<m) c.classList.add('dim'); else {c.classList.add('extra'); pop(c,(i-m)*70);} }));
+          cap.textContent='Matched cubes fade out. The glowing ones are the extras. Count them!'; }
+        if(act.type==='addTo'){ const l=lines[act.row]; for(let i=0;i<act.k;i++){const c=el('div','cb g new'); l.appendChild(c); pop(c,i*70);} cap.textContent='Now count all the cubes in that row.'; }
+        if(act.type==='takeFrom'){ [...lines[act.row].children].slice(-act.k).forEach((c,i)=>{c.classList.add('dim'); pop(c,i*70);}); cap.textContent='The faded cubes are taken away. Count the ones left.'; }
+      },true);
+      tool(tools,'Start over',build);
+    }; build();
+  },
+  countUp(box,{a,goal}){
+    const {body,cap,tools}=shell(box,`Start with ${a} orange cubes. Add blue cubes until you have ${goal}.`);
+    const line=el('div','cline wrapc'); for(let i=0;i<a;i++) line.appendChild(el('div','cb o')); body.appendChild(line);
+    let k=0; const upd=()=>{ const t=a+k; cap.textContent = t===goal ? `You made ${goal}! How many blue cubes did you add?` : `Total: ${t}. Goal: ${goal}.`; };
+    tool(tools,'Add a cube',()=>{ if(a+k>=20)return; k++; const c=el('div','cb b new'); line.appendChild(c); pop(c); upd(); },true);
+    tool(tools,'Take one off',()=>{ if(!k)return; k--; line.lastChild.remove(); upd(); });
+    upd();
+  },
+  hops(box,{start,dir}){
+    const {body,cap,tools}=shell(box,'Tap the number where the frog should START. Then pick which way to hop.');
+    const wrap=el('div','nl'); body.appendChild(wrap);
+    let pos=null, from=null, hs=[];
+    const draw=msg=>{
+      wrap.innerHTML=nlSVG(from,pos,hs);
+      wrap.querySelectorAll('rect[data-n]').forEach(r=>r.addEventListener('click',()=>{
+        from=pos=Number(r.getAttribute('data-n')); hs=[];
+        draw(from===start?`The frog is on ${from}. Now hop!`:`The frog is on ${from}. Hmm, look at the problem again. Is that where you start?`);
+      }));
+      cap.textContent = msg || (pos==null ? 'Tap a number to put the frog on the line.' : (hs.length?`Hops: ${hs.length}. The frog is on ${pos}.`:`The frog is on ${pos}.`));
+    };
+    const hop=d=>{
+      if(pos==null){ draw('Put the frog on the line first. Tap a number!'); return; }
+      if(d!==dir){ draw(dir<0?'Oops! To count BACK, the frog hops toward the smaller numbers.':'Oops! To count ON, the frog hops toward the bigger numbers.'); return; }
+      const n=pos+d; if(n<0||n>20) return; hs.push([pos,n]); pos=n; draw();
+    };
+    tool(tools,'◀ Hop back',()=>hop(-1),true);
+    tool(tools,'Hop forward ▶',()=>hop(1),true);
+    tool(tools,'Start over',()=>{pos=from=null;hs=[];draw();});
+    draw();
+  },
+  pairs(box,{n}){
+    const {body,cap,tools}=shell(box,'Tap "Make pairs" to put the cubes into two equal rows.');
+    const line=el('div','cline wrapc'); for(let i=0;i<n;i++) line.appendChild(el('div','cb b')); body.appendChild(line);
+    let done=false;
+    tool(tools,'Make pairs',()=>{ if(done)return; done=true;
+      const cubes=[...line.children], before=cubes.map(c=>c.getBoundingClientRect());
+      const g=el('div','pairgrid'), r1=el('div','cline'), r2=el('div','cline');
+      cubes.forEach((c,i)=>(i%2?r2:r1).appendChild(c)); g.append(r1,r2); line.replaceWith(g);
+      if(!reduce) cubes.forEach((c,i)=>{const r=c.getBoundingClientRect(); c.animate([{transform:`translate(${before[i].left-r.left}px,${before[i].top-r.top}px)`},{transform:'none'}],{duration:500,easing:'ease-in-out'});});
+      if(n%2){ r1.lastChild.classList.add('extra'); cap.textContent='Look at the glowing cube. Does it have a partner?'; }
+      else cap.textContent='Look closely. Does every cube have a partner?';
+    },true);
+  }
+};
+
+/* ---------- skills ---------- */
+const SKILLS={
+  makeTen:   {name:"Facts that make 10", tip:"Quiz the pairs that make 10: 9+1, 8+2, 7+3, 6+4, 5+5. They power the make-a-10 strategy."},
+  countOn:   {name:"Count on to add", tip:"Say the bigger number, then count up on fingers."},
+  order:     {name:"Turn-around facts", tip:"Show 3 + 9 and 9 + 3 with cubes or fingers. Same sum, different order."},
+  doubles:   {name:"Doubles and near doubles", tip:"Quiz doubles up to 9 + 9. A near double is a double plus 1 (or minus 1)."},
+  make10:    {name:"Make a 10 to add", tip:"For 8 + 6: move 2 over to make 10, then 10 + 4 = 14."},
+  countBack: {name:"Count back to subtract", tip:"Start at the big number and count back out loud."},
+  countOnSub:{name:"Count on to subtract", tip:"When the numbers are close (like 13 − 11), count up from the smaller one."},
+  thinkAdd:  {name:"Think addition to subtract", tip:"Turn 14 − 6 into 6 + ? = 14."},
+  make10Sub: {name:"Make a 10 to subtract", tip:"For 13 − 8: take 3 to land on 10, then take the other 5. 10 − 5 = 5."},
+  word:      {name:"Word problems", tip:"Ask: are we putting together (add) or taking away (subtract)?"},
+  compare:   {name:"More and fewer problems", tip:"'How many more/fewer' means subtract. 'Has 10 more than' means the answer is bigger, so add."},
+  explain:   {name:"Explain your answer", tip:"Practice a full sentence: 'No, because 15 − 9 = 6, not 4.'"},
+  strategy:  {name:"Name the strategy", tip:"Count on goes UP from a number. Count back goes DOWN. A fact has a + or − sign in it."},
+  sumMulti:  {name:"Choose all that apply", tip:"Check every option one at a time. There is usually more than one right answer."},
+  trueWith:  {name:"Yes or No: is it true?", tip:"Put the number in the box, solve, and check if both sides match. (On his test he missed 15 − 8 = 7.)"},
+  twoStep:   {name:"Two-step problems", tip:"Do one step at a time and write each step. 'In all' means add everyone together at the end."},
+  unknownPart:{name:"What is the question asking?", tip:"After solving, reread the question and point to the number it asks for. On his test he wrote the total (8, 14) instead of the missing part (5, 6)."},
+  threeAdd:  {name:"Adding 3 numbers", tip:"Look for a 10 or a double first, then add the last number."},
+  evenOdd:   {name:"Even and odd (Topic 2)", tip:"Pair the cubes up. A cube left over means odd."}
+};
+const ORDER=Object.keys(SKILLS);
+
+const makers={
+  makeTen(){
+    const a=ri(1,9);
+    return {skill:'makeTen', instr:`How many more does ${a} need to make 10?`,
+      widget:['fillTen',{a}],
+      lines:[[a,'+',B(10-a),'=','10'],['So,','10',M,a,'=',B(10-a)]],
+      hint:`Count the empty boxes in the ten frame. They show what ${a} needs to make 10.`};
+  },
+  countOn(kind){
+    if(kind==='pick'||(!kind&&Math.random()<.3)){
+      const b=ri(6,9), sm=ri(3,4), [n1,n2,it]=pick([['Chris','Luke','birds'],['Ava','Mia','stars'],['Leo','Sam','fish']]);
+      const up=(k,c)=>{const a=[];for(let i=1;i<=c;i++)a.push(k+i);return a.join(', ');};
+      const right=`${b} … ${up(b,sm)}`;
+      const opts=shuffle([...new Set([right,`${sm} … ${up(sm,b)}`,`${b} … ${up(b,sm+1)}`,`${b} … ${up(b,sm-1)}`])]);
+      return {skill:'countOn', story:`${n1} draws ${b} ${it}. ${n2} draws ${sm} ${it}. How many ${it} do they draw in all?`, instr:'Which shows how to count on to solve it?',
+        lines:[[{ch:right,opts}],['So, they draw',B(b+sm),{w:it}]],
+        hint:`Start with the bigger number, ${b}. Then count on exactly ${sm} more numbers.`};
+    }
+    const big=ri(5,12), small=ri(1,3), swap=Math.random()<.4;
+    const [a,b]=swap?[small,big]:[big,small];
+    const seq=[];for(let i=1;i<=small;i++)seq.push(big+i);
+    return {skill:'countOn', instr: swap?"Count on to find the sum. Start with the bigger number!":"Count on to find the sum.",
+      widget:['countOn',{big,small}],
+      lines:[[a,'+',b,'=',B(big+small)]],
+      hint:(swap?`Start with the bigger number, ${big}. `:`Start at ${big}. `)+`Count on ${small}: ${seq.join(', ')}.`};
+  },
+  order(){
+    let a=ri(3,9), b=ri(2,8); if(a===b) b=a-1;
+    return {skill:'order', instr:"Find the sum. Then change the order of the addends.",
+      widget:['turnAround',{a,b}],
+      lines:[[a,'+',b,'=',B(a+b)],[a,'+',b,'=',b,'+',B(a)]],
+      hint:`Count on from ${Math.max(a,b)}. When you switch the order, the numbers and the sum stay the same.`};
+  },
+  doubles(){
+    const n=ri(3,9), v=Math.random();
+    if(v<.33){
+      const ds=shuffle([1,2,3,4,5,6,7,8,9].filter(d=>d!==n&&d!==n+1)).slice(0,3);
+      const opts=shuffle([n,...ds]).map(d=>`${d} + ${d}`);
+      return {skill:'doubles', instr:`Which doubles fact helps you solve ${n} + ${n+1}?`,
+        lines:[[{ch:`${n} + ${n}`,opts}],['So,',n,'+',n+1,'=',B(2*n+1)]],
+        hint:`Look for the double that uses ${n}. ${n} + ${n+1} is just one more than it.`};
+    }
+    const more=v<.7;
+    return {skill:'doubles', instr:"Complete the doubles fact. Use it to solve the near double.",
+      widget:['towers',{n,delta:more?1:-1}],
+      lines:[[n,'+',n,'=',B(2*n)], more?['So,',n,'+',n+1,'=',B(2*n+1)]:['So,',n-1,'+',n,'=',B(2*n-1)]],
+      hint: more?`${n} + ${n+1} is one more than ${n} + ${n}.`:`${n-1} + ${n} is one less than ${n} + ${n}.`};
+  },
+  make10(){
+    const a=ri(7,9), need=10-a, b=ri(need+2,9), left=b-need, sum=a+b;
+    return {skill:'make10', instr:`Make a 10 to add ${a} + ${b}.`,
+      widget:['moveTen',{a,b}],
+      lines:[['10','+',B(left),'=',B(sum)],['So,',a,'+',b,'=',B(sum)]],
+      hint:`${a} needs ${need} more to make 10. Move ${need} red counter${need>1?'s':''} into the first frame. How many red are left?`};
+  },
+  countBack(){
+    const t=ri(10,18), s=ri(2,5), seq=[];for(let i=1;i<=s;i++)seq.push(t-i);
+    return {skill:'countBack', instr:`Count back to subtract. Use the frog on the number line.`,
+      widget:['hops',{start:t,dir:-1}],
+      lines:[[t,M,s,'=',B(t-s)]],
+      hint:`To count back, start at the FIRST (bigger) number, ${t}. Then hop back ${s} times.`};
+  },
+  countOnSub(){
+    const t=ri(10,18), d=ri(2,5), s=t-d;
+    return {skill:'countOnSub', instr:`Count on to subtract. Use the frog on the number line.`,
+      widget:['hops',{start:s,dir:1}],
+      lines:[[t,M,s,'=',B(d)]],
+      hint:`To count on, start at the SMALLER number, ${s}. Hop until you reach ${t}. The number of hops is the answer.`};
+  },
+  thinkAdd(kind){
+    const a=ri(4,9), b=ri(3,9), t=a+b, v=kind==='mc'?0:Math.random();
+    if(v<.35){
+      const wrongs=shuffle([...new Set([`${a} + ${b+1} = ${t+1}`,`${a-1} + ${b} = ${t-1}`,`${b} + ${b} = ${2*b}`,`${a} + ${a} = ${2*a}`])].filter(x=>x!==`${a} + ${b} = ${t}`)).slice(0,2);
+      const opts=shuffle([`${a} + ${b} = ${t}`,...wrongs]);
+      return {skill:'thinkAdd', instr:`Which addition fact helps you solve ${t} ${M} ${a}?`,
+        lines:[[{ch:`${a} + ${b} = ${t}`,opts}],['So,',t,M,a,'=',B(b)]],
+        hint:`Find the fact that starts with ${a} and ends with ${t}.`};
+    }
+    if(v<.6){
+      const it=pick(['shells','rocks','stickers']);
+      return {skill:'thinkAdd', story:`Ana has ${a} ${it}. She finds some more. Now she has ${t} ${it}. How many ${it} did she find?`, instr:"",
+        widget:['countUp',{a,goal:t}],
+        lines:[[a,'+',B(b),'=',t],['So, she found',B(b),{w:it}]],
+        hint:`Start at ${a} and add until you get to ${t}. Count what you added.`};
+    }
+    return {skill:'thinkAdd', instr:"Use an addition fact to subtract.",
+      widget:['countUp',{a,goal:t}],
+      lines:[[a,'+',B(b),'=',t],['So,',t,M,a,'=',B(b)]],
+      hint:`What do you add to ${a} to get ${t}? That same number answers ${t} ${M} ${a}.`};
+  },
+  make10Sub(){
+    const t=ri(11,17), first=t-10, s=ri(first+1,9), rest=s-first, ans=t-s;
+    return {skill:'make10Sub', instr:`Make a 10 to find ${t} ${M} ${s}.`,
+      widget:['crossOut',{total:t,tip:`Tap counters to cross out ${s}. Cross out the ${first} in the second frame first. That gets you to 10!`}],
+      lines:[[t,M,B(first),'=','10'],['10',M,B(rest),'=',B(ans)],['So,',t,M,s,'=',B(ans)]],
+      hint:`First take away ${first} to get to 10. You took ${first} of the ${s}, so take away ${rest} more.`};
+  },
+  word(kind){
+    kind=kind||pick(['add','sub']);
+    if(kind==='add'){
+      const a=ri(6,9), b=ri(3,9);
+      const t=pick([
+        [`Ava has ${a} stickers. She gets ${b} more. How many stickers does Ava have now?`,'stickers'],
+        [`Leo picked ${a} apples. His sister picked ${b} apples. How many apples did they pick in all?`,'apples'],
+        [`There are ${a} kids on the swings and ${b} kids on the slide. How many kids are playing?`,'kids'],
+        [`${a} ducks are in a pond. ${b} more ducks swim over. How many ducks are in the pond now?`,'ducks']
+      ]);
+      return {skill:'word', story:t[0], instr:"Pick + or −. Then solve.",
+        widget:['moveTen',{a,b}],
+        lines:[[a,{ch:'+',opts:['+',M]},b,'=',B(a+b),{w:t[1]}]],
+        hint:"Putting groups together means add. Try making a 10!"};
+    }
+    const tot=ri(11,17), s=ri(3,9);
+    const t=pick([
+      [`There are ${tot} birds in a tree. ${s} birds fly away. How many birds are left?`,'birds'],
+      [`Mia had ${tot} crayons. She gave ${s} to a friend. How many crayons does Mia have left?`,'crayons'],
+      [`Sam baked ${tot} cookies. His family ate ${s}. How many cookies are left?`,'cookies'],
+      [`${tot} balloons were at a party. ${s} balloons popped. How many balloons are left?`,'balloons']
+    ]);
+    return {skill:'word', story:t[0], instr:"Pick + or −. Then solve.",
+      widget:['crossOut',{total:tot,tip:`Tap to cross out the ${s} that went away.`}],
+      lines:[[tot,{ch:M,opts:['+',M]},s,'=',B(tot-s),{w:t[1]}]],
+      hint:`Taking away means subtract. Think: ${s} + ? = ${tot}.`};
+  },
+  compare(kind){
+    kind=kind||pick(['diff','than']);
+    const big=ri(11,17), small=ri(5,9);
+    if(kind==='diff'){
+      const t=pick([
+        [`${big} shirts are in a closet. ${small} shirts are in a box. How many more shirts are in the closet?`,'more shirts','Closet','Box'],
+        [`${big} grapes are in a bowl. ${small} grapes are in a cup. How many fewer grapes are in the cup?`,'fewer grapes','Bowl','Cup'],
+        [`Kim has ${big} marbles. Joe has ${small} marbles. How many more marbles does Kim have?`,'more marbles','Kim','Joe'],
+        [`The red team scored ${big} points. The blue team scored ${small} points. How many fewer points did the blue team score?`,'fewer points','Red','Blue']
+      ]);
+      return {skill:'compare', story:t[0], instr:"Pick + or −. Then solve.",
+        widget:['compare',{rows:[{label:t[2],n:big,cls:'o'},{label:t[3],n:small,cls:'b'}],act:{type:'match',label:'Line them up',tip:'Tap "Line them up" to match the cubes one to one.'}}],
+        lines:[[big,{ch:M,opts:['+',M]},small,'=',B(big-small),{w:t[1]}]],
+        hint:`"How many more" or "how many fewer" means find the difference. Take the smaller number away from the bigger one.`};
+    }
+    if(Math.random()<.6){
+      const y=ri(3,9), d=ri(2,9);
+      const t=pick([['Drake','Yuri','books'],['Lily','Max','shells'],['Zoe','Eli','cards']]);
+      return {skill:'compare', story:`${t[0]} has ${d} more ${t[2]} than ${t[1]}. ${t[1]} has ${y} ${t[2]}. How many ${t[2]} does ${t[0]} have?`, instr:"Pick + or −. Then solve.",
+        widget:['compare',{rows:[{label:t[1],n:y,cls:'b'},{label:t[0],n:y,cls:'o'}],act:{type:'addTo',row:1,k:d,label:`Give ${t[0]} ${d} more`,tip:`${t[0]} starts with the same as ${t[1]}. Then tap to give ${t[0]} ${d} more.`}}],
+        lines:[[y,{ch:'+',opts:['+',M]},d,'=',B(y+d),{w:t[2]}]],
+        hint:`${t[0]} has MORE than ${t[1]}, so ${t[0]}'s number must be bigger. Add.`};
+    }
+    const d=ri(3,8);
+    return {skill:'compare', story:`Pat has ${d} fewer stickers than Lee. Lee has ${big} stickers. How many stickers does Pat have?`, instr:"Pick + or −. Then solve.",
+      widget:['compare',{rows:[{label:'Lee',n:big,cls:'b'},{label:'Pat',n:big,cls:'o'}],act:{type:'takeFrom',row:1,k:d,label:`Take ${d} from Pat`,tip:`Pat starts with the same as Lee. Then tap to take ${d} away.`}}],
+      lines:[[big,{ch:M,opts:['+',M]},d,'=',B(big-d),{w:'stickers'}]],
+      hint:`Pat has FEWER than Lee, so Pat's number is smaller. Subtract.`};
+  },
+  explain(){
+    const a=ri(12,17), b=ri(5,9), diff=a-b, yes=Math.random()<.4;
+    let claim=diff; if(!yes){ do{claim=diff+pick([-2,-1,1,2]);}while(claim<1); }
+    const [p,q,thing,past,base]=pick([['Tyler','Ann','pages','read','read'],['Nia','Ben','baskets','made','make'],['Omar','Jess','laps','ran','run']]);
+    return {skill:'explain', story:`${p} ${past} ${a} ${thing}. ${q} ${past} ${b} ${thing}. Did ${p} ${base} ${claim} more ${thing} than ${q}?`,
+      instr:"Pick Yes or No. Then show the real difference.",
+      widget:['compare',{rows:[{label:p,n:a,cls:'o'},{label:q,n:b,cls:'b'}],act:{type:'match',label:'Line them up',tip:'Tap "Line them up" to check.'}}],
+      lines:[[{ch:yes?'Yes':'No',opts:['Yes','No']}],[{w:`${p} ${past}`},B(diff),{w:`more ${thing}.`}]],
+      hint:`Find ${a} ${M} ${b}. Think: ${b} + ? = ${a}. Then compare your answer to ${claim}.`,
+      say: yes?`Yes, because ${a} ${M} ${b} = ${diff}.`:`No, because ${a} ${M} ${b} = ${diff}, not ${claim}.`};
+  }
+};
+Object.assign(makers,{
+  strategy(){
+    const a=ri(4,7), b=ri(2,4), t=a+b, S=['Count on','Count back','Addition fact','Subtraction fact'];
+    const up=[],dn=[]; for(let i=a+1;i<=t;i++)up.push(i); for(let i=t-1;i>=a;i--)dn.push(i);
+    const items=shuffle([[`${a} … ${up.join(', ')}`,S[0]],[`${t} … ${dn.join(', ')}`,S[1]],[`${a} + ${b} = ${t}`,S[2]],[`${t} ${M} ${a} = ${b}`,S[3]]]);
+    return {skill:'strategy', story:`${a} friends want to play baseball. They need ${t} players to make a team. How many more players do they need?`,
+      instr:'Each line shows a way to solve it. Pick how each one was solved.',
+      lines:items.map(([txt,ans])=>[{w:`<b>${txt}</b>`},{ch:ans,opts:S}]),
+      hint:'Count on goes UP. Count back goes DOWN. An addition fact has +. A subtraction fact has −.'};
+  },
+  sumMulti(){
+    const T=ri(11,16), pairs=[];
+    for(let x=2;x<=9;x++){const y=T-x; if(y>=2&&y<=10&&x<=y) pairs.push([x,y]);}
+    const right=shuffle(pairs).slice(0,ri(2,3)).map(([x,y])=>Math.random()<.5?`${x} + ${y}`:`${y} + ${x}`);
+    const pool=[]; for(let x=3;x<=9;x++) for(const d of [-1,1]){const y=T+d-x; if(y>=2&&y<=9) pool.push(`${x} + ${y}`);}
+    const wrong=shuffle([...new Set(pool)]).slice(0,5-right.length);
+    return {skill:'sumMulti', instr:`Which have a sum of ${T}? Choose ALL that apply.`,
+      lines:[[{multi:shuffle([...right,...wrong]),ans:right}]],
+      hint:`Solve each one. Make a 10 or use a double. More than one is right!`};
+  },
+  trueWith(){
+    const n=ri(5,9); let rows;
+    do{ rows=[0,1,2,3].map(()=>{ const t=ri(0,3), ok=Math.random()<.55, off=ok?0:pick([-1,1]);
+        if(t===0){const a=ri(3,9); return [[a,'+',{box:''},'=',a+n+off],ok];}
+        if(t===1){const a=ri(3,9); return [[{box:''},'+',a,'=',a+n+off],ok];}
+        if(t===2){const b=ri(4,9); return [[n+b+off,M,b,'=',{box:''}],ok];}
+        return [['10','+',{box:''},'=',10+n+off],ok]; });
+    }while(rows.every(r=>r[1])||rows.every(r=>!r[1]));
+    return {skill:'trueWith', instr:`Choose Yes or No to show if ${n} will make each equation true.`,
+      lines:rows.map(([eq,ok])=>[...eq,{ch:ok?'Yes':'No',opts:['Yes','No']}]),
+      hint:`Put ${n} in each box and solve. Does it come out right?`};
+  },
+  twoStep(kind){
+    kind=kind||pick(['cards','inall']);
+    if(kind==='cards'){
+      let t,a,b,mid,ans; do{ t=ri(12,18); a=ri(2,5); b=ri(2,6); mid=t-a; ans=mid-b; }while(new Set([a,b,mid,ans]).size<4||ans<1);
+      const [story,unit]=pick([
+        [`A pet store had ${t} fish. Then ${a} fish were sold. The next day, ${b} more fish were sold. How many fish does the store have now?`,'fish'],
+        [`Kim had ${t} stickers. She gave ${a} to Al. Then she gave ${b} to Bo. How many stickers does Kim have now?`,'stickers'],
+        [`There were ${t} cookies on a plate. Dad ate ${a}. Then the kids ate ${b}. How many cookies are left?`,'cookies']]);
+      return {skill:'twoStep', story, instr:'Use the number cards. Tap a card, then tap a box.', cards:shuffle([a,mid,b,ans]),
+        lines:[[t,M,{slot:a},'=',{slot:mid}],[mid,M,{slot:b},'=',{slot:ans}],['Answer:',B(ans),{w:unit}]],
+        hint:`Step 1: ${t} take away ${a}. Step 2: take ${b} more away from that answer.`};
+    }
+    const l=ri(5,9), d=ri(2,4), o=l+d, tot=l+o;
+    const [p1,p2,it]=pick([['Lisa','Armando','pencils'],['Ben','Rosa','toy cars'],['Ella','Max','books']]);
+    const story=`${p1} has ${l} ${it}. ${p2} has ${d} more ${it} than ${p1}. How many ${it} do they have in all?`;
+    if(Math.random()<.5){
+      const right=[`${l} + ${o} = ${tot}`,`${l} + ${l} + ${d} = ${tot}`];
+      const wrong=[`${l} + ${d} = ${o}`,`${l} + ${l} = ${2*l}`,`${o} + ${d} = ${o+d}`];
+      return {skill:'twoStep', story, instr:'Which equations show how many in all? Choose ALL that apply.',
+        lines:[[{multi:shuffle([...right,...wrong]),ans:right}]],
+        hint:`${l} + ${d} = ${o} is only ${p2}'s ${it}. "In all" means ${p1}'s AND ${p2}'s together.`};
+    }
+    return {skill:'twoStep', story, instr:'Two steps! Find how many the second kid has. Then find in all.',
+      widget:['compare',{rows:[{label:p1,n:l,cls:'b'},{label:p2,n:l,cls:'o'}],act:{type:'addTo',row:1,k:d,label:`Give ${p2} ${d} more`,tip:`${p2} starts with the same as ${p1}. Tap to give ${p2} ${d} more.`}}],
+      lines:[[`${p2}:`,l,'+',d,'=',B(o)],['In all:',l,'+',B(o),'=',B(tot)],['They have',B(tot),{w:it}]],
+      hint:`First find ${p2}'s ${it}: ${l} + ${d}. Then add ${p1}'s ${l} to get "in all."`};
+  },
+  unknownPart(kind){
+    kind=kind||pick(['change','start','fewer','which']);
+    if(kind==='change'){
+      const a=ri(5,9), c=ri(3,8), t=a+c;
+      return {skill:'unknownPart', story:`Marco has ${a} apples. Jerry gives him some more apples. Now Marco has ${t} apples. How many apples did Jerry give Marco?`, instr:'',
+        widget:['countUp',{a,goal:t}],
+        lines:[[a,'+',B(c),'=',t],['Jerry gave',B(c),{w:'apples'}]],
+        hint:`The question asks how many Jerry GAVE, not how many Marco has now. Count up from ${a} to ${t}.`};
+    }
+    if(kind==='start'){
+      const g=ri(3,8), left=ri(4,9), st=g+left;
+      const [nm,it,to]=pick([['Jen','rings','Carrie'],['Omar','marbles','Ali'],['Rosa','stickers','Lily']]);
+      return {skill:'unknownPart', story:`${nm} has some ${it}. ${nm==='Omar'?'He':'She'} gives ${g} ${it} to ${to}. Now ${nm} has ${left} ${it}. How many ${it} did ${nm} have at first?`, instr:'',
+        lines:[[B(st),M,g,'=',left],[`${nm} had`,B(st),{w:`${it} at first`}]],
+        hint:`Put the ${it} back together: ${left} + ${g}. That's how many ${nm} had before giving any away.`};
+    }
+    if(kind==='fewer'){
+      const big=ri(12,17), d=ri(5,9);
+      return {skill:'unknownPart', story:`Julie has ${d} fewer pears than Dan. Dan has ${big} pears. How many pears does Julie have?`, instr:'Pick + or −. Then solve.',
+        widget:['compare',{rows:[{label:'Dan',n:big,cls:'b'},{label:'Julie',n:big,cls:'o'}],act:{type:'takeFrom',row:1,k:d,label:`Take ${d} from Julie`,tip:`Julie starts with the same as Dan. Tap to take ${d} away.`}}],
+        lines:[[big,{ch:M,opts:['+',M]},d,'=',B(big-d)],['Julie has',B(big-d),{w:'pears'}]],
+        hint:`Julie has FEWER than Dan, so her number is smaller than ${big}. The answer is NOT ${big}.`};
+    }
+    let a,c; do{a=ri(5,9); c=ri(3,8);}while(a===c); const t=a+c;
+    const opts=shuffle([String(a),String(c),String(t)]);
+    return {skill:'unknownPart', story:`Marco has ${a} apples. Jerry gives him some more. Now Marco has ${t} apples. This equation solves it: <b>${a} + ${c} = ${t}</b>`,
+      instr:'How many apples did Jerry give Marco?',
+      lines:[[{ch:String(c),opts}],['Jerry gave',B(c),{w:'apples'}]],
+      hint:`${a} is what Marco had. ${t} is what he has now. Which number is what Jerry GAVE?`};
+  },
+  threeAdd(){
+    const names=['Kade','Olivia','Ali'], cols=['Flowers','Animals','Stars'];
+    const data=names.map(()=>cols.map(()=>ri(1,9)));
+    const k=ri(0,2), [a,b,c]=data[k];
+    const tbl=`<table class="stbl"><tr><th></th>${cols.map(x=>`<th>${x}</th>`).join('')}</tr>${names.map((n,i)=>`<tr><th>${n}</th>${data[i].map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</table>`;
+    return {skill:'threeAdd', story:`The table shows how many stickers 3 friends have.${tbl}How many stickers does <b>${names[k]}</b> have in all?`,
+      instr:'Write the equation: flowers + animals + stars.',
+      lines:[[B(a),'+',B(b),'+',B(c),'=',B(a+b+c)],['Answer:',B(a+b+c),{w:'stickers'}]],
+      hint:`Find ${names[k]}'s row. Add the 3 numbers. Look for a 10 or a double first!`};
+  },
+  evenOdd(){
+    const n=ri(5,19), half=Math.floor(n/2);
+    return {skill:'evenOdd', instr:`Is ${n} even or odd?`,
+      widget:['pairs',{n}],
+      lines:[[{ch:n%2?'Odd':'Even',opts:['Even','Odd']}], n%2?[n,'=',B(half),'+',half,'+','1']:[n,'=',B(half),'+',half]],
+      hint:`Even numbers make pairs with none left over. Odd numbers have 1 left over.`};
+  }
+});
+const KINDS={word:['add','sub'],compare:['diff','than'],unknownPart:['change','start','fewer','which'],twoStep:['cards','inall']};
+function gen(k,i){ const ks=KINDS[k]; return makers[k](ks?ks[i%ks.length]:undefined); }
+const TEST=[['countOn','pick'],['twoStep','inall'],['make10'],['sumMulti'],['strategy'],['thinkAdd','mc'],['make10Sub'],['unknownPart','start'],['unknownPart','change'],['twoStep','cards'],['trueWith'],['unknownPart','fewer'],['threeAdd'],['unknownPart','which'],['trueWith']];
+const FIX=[['unknownPart','change'],['twoStep','cards'],['unknownPart','fewer'],['thinkAdd','mc'],['unknownPart','start'],['twoStep','inall'],['trueWith'],['unknownPart','which'],['twoStep','cards'],['unknownPart','change']];
+function genOld(k,i){ if(k==='word') return makers.word(i%2?'sub':'add'); if(k==='compare') return makers.compare(i%2?'than':'diff'); return makers[k](); }
+
+/* ---------- state & screens ---------- */
+let S={qs:[],i:0,tries:0,results:[],streak:0,mode:null,key:null};
+const app=document.getElementById('app');
+const menuBtn=document.getElementById('menuBtn');
+menuBtn.onclick=()=>showStart();
+
+function drawProgress(){
+  const p=document.getElementById('progress');
+  p.innerHTML=S.qs.map((_,k)=>`<span class="pc ${S.results[k]||(k===S.i&&!S.over?'now':'')}"></span>`).join('');
+  document.getElementById('streak').textContent = S.streak>=2 ? `🔥 ${S.streak} in a row` : '';
+}
+function start(mode,key){
+  let qs;
+  if(mode==='test') qs=TEST.map(([k,kd])=>makers[k](kd));
+  else if(mode==='fix') qs=FIX.map(([k,kd])=>makers[k](kd));
+  else if(mode==='full') qs=ORDER.map(k=>gen(k,ri(0,3)));
+  else if(mode==='quick') qs=shuffle(ORDER).slice(0,12).map(k=>gen(k,ri(0,3)));
+  else qs=[0,1,2,3,4,5].map(i=>gen(key,i));
+  S={qs,i:0,tries:0,results:[],streak:0,mode,key,over:false};
+  menuBtn.hidden=false; showQ();
+}
+function showStart(){
+  S={qs:[],i:0,tries:0,results:[],streak:0}; menuBtn.hidden=true;
+  app.innerHTML=`
+  <section class="card">
+    <h1>Hi Matthew! Let's get ready for your test.</h1>
+    <p class="instr">Move counters, hop the frog, and stack cubes to solve each problem.</p>
+    <div class="modes">
+      <button data-m="test">Real test style<small>15 problems that look like the Topic 1 test</small></button>
+      <button data-m="fix" class="tool main" style="font-size:21px;padding:12px 26px">Fix the tricky ones<small>10 problems like the ones missed on the test</small></button>
+      <button data-m="full" class="quiet" style="font-size:19px;font-weight:700;padding:12px 26px;text-align:left">Workbook review<small>One of every kind of problem (${ORDER.length})</small></button>
+      <button data-m="quick" class="quiet" style="font-size:19px;font-weight:700;padding:12px 26px;text-align:left">Quick mix<small>12 random problems</small></button>
+    </div>
+    <h2>Practice one thing</h2>
+    <div class="skillgrid">${ORDER.map(k=>`<button data-k="${k}">${SKILLS[k].name}</button>`).join('')}</div>
+    <p class="note">For grown-ups: every run makes new numbers. \"Fix the tricky ones\" targets what was missed on the Topic 1 test: two-step problems and answering the number the question actually asks for. After a run, the results screen points out which strategies to practice, with a button to drill just that one.</p>
+  </section>`;
+  app.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>start(b.dataset.m));
+  app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>start('skill',b.dataset.k));
+  drawProgress(); window.scrollTo(0,0);
+}
+function renderLine(line){
+  return `<div class="eq">`+line.map(tok=>{
+    if(tok&&typeof tok==='object'){
+      if('b' in tok) return `<input class="blank" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" aria-label="answer" data-ans="${tok.b}">`;
+      if('ch' in tok) return `<span class="choices" data-ans="${tok.ch}" data-val="" role="group">${tok.opts.map(o=>`<button type="button" class="choice${String(o).length>3?' long':''}" data-v="${o}">${o}</button>`).join('')}</span>`;
+      if('multi' in tok) return `<span class="choices multi" data-ans="${tok.ans.slice().sort().join('|')}" data-val="" role="group">${tok.multi.map(o=>`<button type="button" class="choice long" data-v="${o}">☐ ${o}</button>`).join('')}</span>`;
+      if('slot' in tok) return `<button type="button" class="slot" data-ans="${tok.slot}" data-val="" aria-label="card box"></button>`;
+      if('box' in tok) return `<span class="box" aria-label="box"></span>`;
+      if('w' in tok) return `<span class="word">${tok.w}</span>`;
+    }
+    if(typeof tok==='string' && tok.startsWith('So,')) return `<span class="so">${tok}</span>`;
+    return `<span>${tok}</span>`;
+  }).join('')+`</div>`;
+}
+function showQ(){
+  const q=S.qs[S.i]; S.tries=0;
+  app.innerHTML=`
+  <section class="card">
+    <span class="skill">${SKILLS[q.skill].name}</span>
+    <div class="count">Problem ${S.i+1} of ${S.qs.length}</div>
+    ${q.story?`<p class="story">${q.story}</p>`:''}
+    ${q.instr?`<p class="instr">${q.instr}</p>`:''}
+    ${q.widget?`<div id="vis"></div>`:''}
+    ${q.cards?`<div class="cards"><span class="lab">Number cards (use each one once):</span>${q.cards.map((v,i)=>`<button type="button" class="ncard" data-v="${v}" data-i="${i}">${v}</button>`).join('')}</div>`:''}
+    <div>${q.lines.map(renderLine).join('')}</div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+    <div class="actions" id="acts"><button id="check">Check</button></div>
+  </section>`;
+  if(q.widget) W[q.widget[0]](document.getElementById('vis'),q.widget[1]);
+  document.getElementById('check').onclick=check;
+  app.querySelectorAll('input.blank').forEach(inp=>{
+    inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'');inp.classList.remove('wrong');});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();check();}});
+  });
+  app.querySelectorAll('.choices').forEach(g=>g.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{
+    if(g.dataset.locked)return; g.classList.remove('wrong');
+    if(g.classList.contains('multi')){
+      b.classList.toggle('sel'); b.textContent=(b.classList.contains('sel')?'☑ ':'☐ ')+b.dataset.v;
+      g.dataset.val=[...g.querySelectorAll('.choice.sel')].map(x=>x.dataset.v).sort().join('|');
+    } else {
+      g.dataset.val=b.dataset.v; g.querySelectorAll('.choice').forEach(x=>x.classList.toggle('sel',x===b));
+    }
+  }));
+  let selCard=null;
+  app.querySelectorAll('.ncard').forEach(c=>c.onclick=()=>{ if(c.classList.contains('used'))return;
+    app.querySelectorAll('.ncard').forEach(x=>x.classList.remove('sel')); selCard=c; c.classList.add('sel'); });
+  app.querySelectorAll('.slot').forEach(sl=>sl.onclick=()=>{ if(sl.dataset.locked)return; sl.classList.remove('wrong');
+    if(sl.dataset.val!==''){ const c=app.querySelector(`.ncard[data-i="${sl.dataset.ci}"]`); if(c)c.classList.remove('used');
+      sl.dataset.val=''; sl.textContent=''; sl.classList.remove('filled'); return; }
+    if(!selCard){ wobble(app.querySelector('.cards')); return; }
+    sl.dataset.val=selCard.dataset.v; sl.dataset.ci=selCard.dataset.i; sl.textContent=selCard.dataset.v; sl.classList.add('filled');
+    selCard.classList.add('used'); selCard.classList.remove('sel'); selCard=null; pop(sl); });
+  if(!isTouch){const f=app.querySelector('input.blank'); if(f) f.focus({preventScroll:true});}
+  drawProgress(); window.scrollTo(0,0);
+}
+function confetti(){
+  if(reduce)return;
+  const box=el('div','confetti'); document.body.appendChild(box);
+  const cols=['var(--yellow)','var(--red)','var(--blue)','var(--green)','var(--orange)'];
+  for(let i=0;i<46;i++){ const p=el('span'); p.style.background=cols[i%5]; p.style.left=(5+Math.random()*90)+'%'; box.appendChild(p);
+    p.animate([{transform:'translate(0,-40px) rotate(0)',opacity:1},{transform:`translate(${(Math.random()-.5)*220}px,${320+Math.random()*320}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:1100+Math.random()*700,easing:'cubic-bezier(.2,.6,.4,1)',fill:'forwards'}); }
+  setTimeout(()=>box.remove(),2000);
+}
+const cheers=["Nice work!","You got it!","Great thinking!","That's right!","Super!","Awesome!","Math star!"];
+function check(){
+  const q=S.qs[S.i], msg=document.getElementById('msg');
+  const ins=[...app.querySelectorAll('input.blank')], chs=[...app.querySelectorAll('.choices')], sls=[...app.querySelectorAll('.slot')];
+  if(ins.some(i=>i.value==='')||chs.some(c=>!c.dataset.val)||sls.some(x=>x.dataset.val==='')){ msg.className='msg hint'; msg.textContent='Fill in every box and make every choice, then tap Check.'; return; }
+  let allRight=true;
+  ins.forEach(i=>{const ok=parseInt(i.value,10)===Number(i.dataset.ans); i.classList.toggle('right',ok); i.classList.toggle('wrong',!ok); if(!ok)allRight=false;});
+  chs.forEach(c=>{const ok=c.dataset.val===c.dataset.ans; c.classList.toggle('right',ok); c.classList.toggle('wrong',!ok); if(!ok)allRight=false;});
+  sls.forEach(x=>{const ok=x.dataset.val===x.dataset.ans; x.classList.toggle('right',ok); x.classList.toggle('wrong',!ok); if(!ok)allRight=false;});
+  if(allRight){
+    S.results[S.i]=S.tries===0?'first':'second';
+    S.streak = S.tries===0 ? S.streak+1 : 0;
+    msg.className='msg good'; msg.innerHTML=pick(cheers)+(q.say?`<span class="say">Now say it out loud: "${q.say}"</span>`:'');
+    ins.forEach(i=>i.disabled=true); chs.forEach(c=>c.dataset.locked=1); sls.forEach(x=>x.dataset.locked=1);
+    confetti(); finishQ(); return;
+  }
+  S.tries++; S.streak=0;
+  if(S.tries===1){
+    msg.className='msg hint';
+    msg.innerHTML=`<strong>Not quite.</strong> Hint: ${q.hint}${q.widget?' Use the counters or cubes above to help.':''} Fix the red ${app.querySelectorAll('.wrong').length>1?'ones':'one'} and try again.`;
+  } else {
+    S.results[S.i]='missed';
+    ins.forEach(i=>{ if(i.classList.contains('wrong')){i.value=i.dataset.ans;i.classList.remove('wrong');i.classList.add('revealed');} i.disabled=true; });
+    chs.forEach(c=>{ if(c.classList.contains('wrong')){c.dataset.val=c.dataset.ans;c.classList.remove('wrong');c.classList.add('revealed');const set=c.dataset.ans.split('|'); c.querySelectorAll('.choice').forEach(x=>{const on=set.includes(x.dataset.v); x.classList.toggle('sel',on); if(c.classList.contains('multi')) x.textContent=(on?'☑ ':'☐ ')+x.dataset.v;});} c.dataset.locked=1; });
+    sls.forEach(x=>{ if(x.classList.contains('wrong')){x.dataset.val=x.dataset.ans; x.textContent=x.dataset.ans; x.classList.remove('wrong'); x.classList.add('revealed','filled');} x.dataset.locked=1; });
+    msg.className='msg bad'; msg.innerHTML=`Good try. The right answer is in orange. ${q.hint}`+(q.say?`<span class="say">Say it: "${q.say}"</span>`:'');
+    finishQ();
+  }
+  drawProgress();
+}
+function finishQ(){
+  const acts=document.getElementById('acts'), last=S.i===S.qs.length-1;
+  acts.innerHTML=`<button id="next">${last?'See my results':'Next'}</button>`;
+  const n=document.getElementById('next');
+  n.onclick=()=>{ if(last){S.over=true;showResults();} else {S.i++;showQ();} };
+  n.focus({preventScroll:true}); drawProgress();
+}
+function showResults(){
+  const total=S.qs.length, first=S.results.filter(r=>r==='first').length, second=S.results.filter(r=>r==='second').length;
+  const pct=(first+second*.5)/total;
+  const stars=pct>=.9?3:pct>=.7?2:1;
+  const headline=pct>=.9?"You're ready, Matthew!":pct>=.7?"Great job, Matthew!":"Good practice, Matthew!";
+  const by={}; S.qs.forEach((q,k)=>(by[q.skill]||=[]).push(S.results[k]));
+  const rows=ORDER.filter(k=>by[k]).map(k=>{ const rs=by[k], strong=rs.every(r=>r==='first');
+    return `<li><div class="row"><span>${SKILLS[k].name}</span><span class="dots">${rs.map(r=>`<span class="pc ${r}"></span>`).join('')}</span></div>
+      ${strong?'':`<div class="tip">${SKILLS[k].tip}</div><button data-k="${k}">Practice this</button>`}</li>`; }).join('');
+  app.innerHTML=`
+  <section class="card">
+    <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+    <h1>${headline}</h1>
+    <div class="score">${first}<small> of ${total} right on the first try</small></div>
+    ${second?`<p class="instr" style="font-size:18px;margin-top:10px">Plus ${second} fixed on the second try.</p>`:''}
+    <div class="legend"><span><span class="pc first"></span>First try</span><span><span class="pc second"></span>Second try</span><span><span class="pc missed"></span>Needs practice</span></div>
+    <ul class="skills">${rows}</ul>
+    <div class="actions"><button id="again">Go again with new problems</button><button class="quiet" id="home">Menu</button></div>
+  </section>`;
+  if(pct>=.7) confetti();
+  document.getElementById('again').onclick=()=>start(S.mode,S.key);
+  document.getElementById('home').onclick=showStart;
+  app.querySelectorAll('.skills [data-k]').forEach(b=>b.onclick=()=>start('skill',b.dataset.k));
+  drawProgress(); window.scrollTo(0,0);
+}
+showStart();
+</script>
+</body>
+</html>
